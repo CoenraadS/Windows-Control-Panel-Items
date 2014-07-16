@@ -18,8 +18,8 @@ namespace test
             //Warning, spawns a lot of windows.
             foreach (var item in myList)
             {
-                Debug.WriteLine(item.localizedString);
-                Process.Start(item.executablePath);
+                //Debug.WriteLine(item.localizedString);
+                //Process.Start(item.executablePath);
             }
 
             MessageBox.Show("Test Complete");

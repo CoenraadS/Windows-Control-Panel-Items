@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Drawing;
 
 namespace WindowsControlPanelItems
 {
@@ -12,8 +13,17 @@ namespace WindowsControlPanelItems
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool FreeLibrary(IntPtr hModule);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int LoadString(IntPtr hInstance, uint uID, StringBuilder lpBuffer, int nBufferMax);
+
+        [DllImport("Shell32.dll", EntryPoint = "ExtractIconExW", CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
+        extern static bool DestroyIcon(IntPtr handle);
 
         const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
         const string CONTROL = @"%SystemRoot%\System32\control.exe";
@@ -24,75 +34,134 @@ namespace WindowsControlPanelItems
             string applicationName;
             string[] localizedString = new string[2];
             string[] infoTip = new string[2];
+            string[] iconString = new string[2];
             IntPtr hMod;
             uint stringTableIndex;
+            int iconIndex;
             StringBuilder resource;
             ProcessStartInfo executablePath;
+            IntPtr largeIconPtr = IntPtr.Zero;
+            IntPtr smallIconPtr = IntPtr.Zero;
+            Icon largeIcon;
+            Icon smallIcon;
 
             RegistryKey nameSpace = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
+            RegistryKey clsid = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID");
             RegistryKey currentKey;
 
             foreach (string key in nameSpace.GetSubKeyNames())
             {
-                currentKey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID").OpenSubKey(key);
+                currentKey = clsid.OpenSubKey(key);
                 if (currentKey != null)
                 {
+                    Debug.Write(key.ToString());
                     if (currentKey.GetValue("System.ApplicationName") != null && currentKey.GetValue("LocalizedString") != null)
                     {
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
+                        Debug.WriteLine(" (" + applicationName + ")");
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
                         localizedString[0] = localizedString[0].Substring(1); //First char is always '@'
                         localizedString[0] = Environment.ExpandEnvironmentVariables(localizedString[0]);
-                        localizedString[1] = localizedString[1].Substring(1); //First char is always '-'
-
-                        hMod = LoadLibraryEx(localizedString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-
-                        stringTableIndex = sanitizeUint(localizedString[1]);
-
-                        resource = new StringBuilder(255);
-                        LoadString(hMod, stringTableIndex, resource, resource.Capacity + 1);
-
-                        localizedString[0] = resource.ToString();
-
-                        if (currentKey.GetValue("InfoTip") != null)
+                        if (localizedString.Length > 1)
                         {
-                            infoTip = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
-                            infoTip[0] = infoTip[0].Substring(1); //First char is always '@'
-                            infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
-                            infoTip[1] = infoTip[1].Substring(1); //First char is always '-'
+                            hMod = LoadLibraryEx(localizedString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
-                            hMod = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-
-                            stringTableIndex = sanitizeUint(infoTip[1]);
+                            stringTableIndex = sanitizeUint(localizedString[1]);
 
                             resource = new StringBuilder(255);
                             LoadString(hMod, stringTableIndex, resource, resource.Capacity + 1);
 
-                            infoTip[0] = resource.ToString();
-                        }
-                        else if (currentKey.GetValue(null) != null)
-                        {
-                            infoTip[0] = currentKey.GetValue(null).ToString();
-                        }
-                        else
-                        {
-                            infoTip[0] = "";
-                        }
+                            localizedString[0] = resource.ToString();
 
-                        executablePath = new ProcessStartInfo();
-                        executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
-                        executablePath.Arguments = "-name " + applicationName;
-                        controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath));
-                    }                    
+                            if (currentKey.GetValue("InfoTip") != null)
+                            {
+                                infoTip = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
+                                infoTip[0] = infoTip[0].Substring(1); //First char is always '@'
+                                infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
+
+                                hMod = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+
+                                stringTableIndex = sanitizeUint(infoTip[1]);
+
+                                resource = new StringBuilder(255);
+                                LoadString(hMod, stringTableIndex, resource, resource.Capacity + 1);
+
+                                infoTip[0] = resource.ToString();
+                            }
+                            else if (currentKey.GetValue(null) != null)
+                            {
+                                infoTip[0] = currentKey.GetValue(null).ToString();
+                            }
+                            else
+                            {
+                                infoTip[0] = "";
+                            }
+
+                            smallIcon = null;
+                            largeIcon = null;
+
+                            if (currentKey.OpenSubKey("DefaultIcon") != null)
+                            {
+                                if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
+                                {
+                                    iconString = currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2);
+
+                                    if (iconString.Length > 1)
+                                    {
+                                        iconIndex = (int)sanitizeUint(iconString[1]);
+                                    }
+                                    else
+                                    {
+                                        iconIndex = 0;
+                                    }
+
+                                    ExtractIconEx(iconString[0], iconIndex, out largeIconPtr, out smallIconPtr, 1);
+
+                                    try
+                                    {
+                                        smallIcon = Icon.FromHandle(smallIconPtr);
+                                        largeIcon = Icon.FromHandle(largeIconPtr);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug.WriteLine(ex.Message);
+                                    }
+
+                                }
+                            }
+
+                            executablePath = new ProcessStartInfo();
+                            executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
+                            executablePath.Arguments = "-name " + applicationName;
+                            controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, smallIcon, largeIcon));
+
+                            if (largeIconPtr != IntPtr.Zero)
+                            {
+                                DestroyIcon(largeIcon.Handle);
+                            }
+                            if (smallIconPtr != IntPtr.Zero)
+                            {
+                                DestroyIcon(smallIcon.Handle);
+                            }
+                            FreeLibrary(hMod);
+                        }
+                    }
                 }
             }
 
             return controlPanelItems;
         }
 
-        public static uint sanitizeUint(string args) //Remove all chars after digits.
+        public static uint sanitizeUint(string args) //Remove all chars before and after first set of digits.
         {
             int x = 0;
+
+            while (x < args.Length && !Char.IsDigit(args[x]))
+            {
+                args = args.Substring(1);
+            }
+
+
             while (x < args.Length && Char.IsDigit(args[x]))
             {
                 x++;
