@@ -19,6 +19,10 @@ namespace WindowsControlPanelItems
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int LoadString(IntPtr hInstance, uint uID, StringBuilder lpBuffer, int nBufferMax);
 
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern IntPtr LoadImage(IntPtr hinst, IntPtr lpszName, uint uType,
+        int cxDesired, int cyDesired, uint fuLoad);
+
         [DllImport("Shell32.dll", EntryPoint = "ExtractIconExW", CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
         private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
 
@@ -26,6 +30,7 @@ namespace WindowsControlPanelItems
         extern static bool DestroyIcon(IntPtr handle);
 
         const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
+
         const string CONTROL = @"%SystemRoot%\System32\control.exe";
 
         public static List<ControlPanelItem> Create()
@@ -35,15 +40,13 @@ namespace WindowsControlPanelItems
             string[] localizedString;
             string[] infoTip = new string[1];
             List<string> iconString;
-            IntPtr hMod;
+            IntPtr dataFilePointer;
             uint stringTableIndex;
-            int iconIndex;
+            IntPtr iconIndex;
             StringBuilder resource;
             ProcessStartInfo executablePath;
             IntPtr largeIconPtr = IntPtr.Zero;
-            IntPtr smallIconPtr = IntPtr.Zero;
             Icon largeIcon;
-            Icon smallIcon;
 
             RegistryKey nameSpace = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
             RegistryKey clsid = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID");
@@ -57,32 +60,39 @@ namespace WindowsControlPanelItems
                     if (currentKey.GetValue("System.ApplicationName") != null && currentKey.GetValue("LocalizedString") != null)
                     {
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
+                        Debug.WriteLine(key.ToString() + " (" + applicationName + ")");
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
-                        localizedString[0] = localizedString[0].Substring(1); //First char is always '@'
+                        if (localizedString[0][0] == '@')
+                        {
+                            localizedString[0] = localizedString[0].Substring(1);
+                        }
                         localizedString[0] = Environment.ExpandEnvironmentVariables(localizedString[0]);
                         if (localizedString.Length > 1)
                         {
-                            hMod = LoadLibraryEx(localizedString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+                            dataFilePointer = LoadLibraryEx(localizedString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
                             stringTableIndex = sanitizeUint(localizedString[1]);
 
                             resource = new StringBuilder(255);
-                            LoadString(hMod, stringTableIndex, resource, resource.Capacity + 1);
+                            LoadString(dataFilePointer, stringTableIndex, resource, resource.Capacity + 1);
 
                             localizedString[0] = resource.ToString();
 
                             if (currentKey.GetValue("InfoTip") != null)
                             {
                                 infoTip = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
-                                infoTip[0] = infoTip[0].Substring(1); //First char is always '@'
+                                if (infoTip[0][0] == '@')
+                                {
+                                    infoTip[0] = infoTip[0].Substring(1);
+                                }
                                 infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
 
-                                hMod = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+                                dataFilePointer = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE); //IMAGEFILE
 
                                 stringTableIndex = sanitizeUint(infoTip[1]);
 
                                 resource = new StringBuilder(255);
-                                LoadString(hMod, stringTableIndex, resource, resource.Capacity + 1);
+                                LoadString(dataFilePointer, stringTableIndex, resource, resource.Capacity + 1);
 
                                 infoTip[0] = resource.ToString();
                             }
@@ -95,7 +105,8 @@ namespace WindowsControlPanelItems
                                 infoTip[0] = "";
                             }
 
-                            smallIcon = null;
+                            FreeLibrary(dataFilePointer); //We are finished with extracting strings. Prepare to load icon file.
+                            dataFilePointer = IntPtr.Zero;
                             largeIcon = null;
 
                             if (currentKey.OpenSubKey("DefaultIcon") != null)
@@ -103,6 +114,12 @@ namespace WindowsControlPanelItems
                                 if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
                                 {
                                     iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2));
+                                    if (iconString[0][0] == '@')
+                                    {
+                                        iconString[0] = iconString[0].Substring(1);
+                                    }
+
+                                    dataFilePointer = LoadLibraryEx(iconString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
                                     if (iconString.Count < 2)
                                     {
@@ -110,22 +127,17 @@ namespace WindowsControlPanelItems
                                     }
 
 
-                                    iconIndex = (int)sanitizeUint(iconString[1]);
-                                    if (iconIndex == 1) //-1 is reserved in the ExtractIconEx function (against MSDN documentation...).
-                                    {
-                                        iconIndex = 0;
-                                    }
-                                    else
-                                    {
-                                        iconIndex = iconIndex * -1; //Negative index points to specific icon.
-                                    }
+                                    iconIndex = (IntPtr)sanitizeUint(iconString[1]);
 
-                                    ExtractIconEx(iconString[0], iconIndex, out largeIconPtr, out smallIconPtr, 1);
+                                    largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, 256, 256, 0);
+                                    if (largeIconPtr == IntPtr.Zero)
+                                    {
+                                        Debug.WriteLine(Marshal.GetLastWin32Error());
+                                    }
 
                                     try
                                     {
                                         largeIcon = Icon.FromHandle(largeIconPtr);
-                                        smallIcon = Icon.FromHandle(smallIconPtr);
                                     }
                                     catch (Exception)
                                     {
@@ -138,17 +150,12 @@ namespace WindowsControlPanelItems
                             executablePath = new ProcessStartInfo();
                             executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
                             executablePath.Arguments = "-name " + applicationName;
-                            controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, smallIcon, largeIcon));
-
+                            controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, largeIcon));
+                            FreeLibrary(dataFilePointer);
                             if (largeIconPtr != IntPtr.Zero)
                             {
                                 DestroyIcon(largeIcon.Handle);
                             }
-                            if (smallIconPtr != IntPtr.Zero)
-                            {
-                                DestroyIcon(smallIcon.Handle);
-                            }
-                            FreeLibrary(hMod);
                         }
                     }
                 }
