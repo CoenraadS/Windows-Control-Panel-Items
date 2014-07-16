@@ -19,8 +19,8 @@ namespace WindowsControlPanelItems
             infoTip = newInfoTip;
             applicationName = newApplicationName;
             executablePath = newExecutablePath;
-            smallIcon = newSmallIcon;
-            largeIcon = newLargeIcon;
+            smallIcon = (Icon)newSmallIcon.Clone();
+            largeIcon = (Icon)newLargeIcon.Clone();
         }
     }
 }
