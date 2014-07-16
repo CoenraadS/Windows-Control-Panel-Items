@@ -111,7 +111,16 @@ namespace WindowsControlPanelItems
                                         iconString.Add("0");
                                     }
 
+
                                     iconIndex = (int)sanitizeUint(iconString[1]);
+                                    if (iconIndex == 1) //-1 is reserved in the ExtractIconEx function (against MSDN documentation...).
+                                    {
+                                        iconIndex = 0;
+                                    }
+                                    else
+                                    {
+                                        iconIndex = iconIndex * -1; //Negative index points to specific icon.
+                                    }
 
                                     ExtractIconEx(iconString[0], iconIndex, out largeIconPtr, out smallIconPtr, 1);
 
@@ -159,6 +168,7 @@ namespace WindowsControlPanelItems
                 args = args.Substring(1);
             }
 
+            x = 0;
 
             while (x < args.Length && Char.IsDigit(args[x]))
             {
