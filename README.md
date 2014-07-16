@@ -1,6 +1,8 @@
-####Programmatically generate a list of Control Panel Items for the Local User.
+#### Programmatically generate a list of Control Panel Items for the Local User.
 
-#####Information retrieved:
+###### Usage: `List<ControlPanelItem> foo = WindowsControlPanelItems.List.Create()`
+
+###### Information retrieved:
 
 - LocalizedString (Title)
 
