@@ -54,11 +54,9 @@ namespace WindowsControlPanelItems
                 currentKey = clsid.OpenSubKey(key);
                 if (currentKey != null)
                 {
-                    Debug.Write(key.ToString());
                     if (currentKey.GetValue("System.ApplicationName") != null && currentKey.GetValue("LocalizedString") != null)
                     {
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
-                        Debug.WriteLine(" (" + applicationName + ")");
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
                         localizedString[0] = localizedString[0].Substring(1); //First char is always '@'
                         localizedString[0] = Environment.ExpandEnvironmentVariables(localizedString[0]);
@@ -129,9 +127,9 @@ namespace WindowsControlPanelItems
                                         largeIcon = Icon.FromHandle(largeIconPtr);
                                         smallIcon = Icon.FromHandle(smallIconPtr);
                                     }
-                                    catch (Exception ex)
+                                    catch (Exception)
                                     {
-                                        Debug.WriteLine(ex.Message);
+                                        //Silently fail for now.
                                     }
                                 }                                
                             }
