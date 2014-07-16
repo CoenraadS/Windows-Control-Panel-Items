@@ -42,9 +42,10 @@ namespace WindowsControlPanelItems
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
                         localizedString[0] = localizedString[0].Substring(1); //First char is always '@'
+                        localizedString[0] = Environment.ExpandEnvironmentVariables(localizedString[0]);
                         localizedString[1] = localizedString[1].Substring(1); //First char is always '-'
 
-                        hMod = LoadLibraryEx(Environment.ExpandEnvironmentVariables(localizedString[0]), IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+                        hMod = LoadLibraryEx(localizedString[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
                         stringTableIndex = sanitizeUint(localizedString[1]);
 
@@ -57,9 +58,10 @@ namespace WindowsControlPanelItems
                         {
                             infoTip = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
                             infoTip[0] = infoTip[0].Substring(1); //First char is always '@'
+                            infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
                             infoTip[1] = infoTip[1].Substring(1); //First char is always '-'
 
-                            hMod = LoadLibraryEx(Environment.ExpandEnvironmentVariables(infoTip[0]), IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+                            hMod = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
                             stringTableIndex = sanitizeUint(infoTip[1]);
 
@@ -78,7 +80,7 @@ namespace WindowsControlPanelItems
                         }
 
                         executablePath = new ProcessStartInfo();
-                        executablePath.FileName = CONTROL;
+                        executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
                         executablePath.Arguments = "-name " + applicationName;
                         controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath));
                     }                    
