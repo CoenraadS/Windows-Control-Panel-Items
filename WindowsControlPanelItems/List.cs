@@ -32,9 +32,9 @@ namespace WindowsControlPanelItems
         {
             List<WindowsControlPanelItems.ControlPanelItem> controlPanelItems = new List<WindowsControlPanelItems.ControlPanelItem>();
             string applicationName;
-            string[] localizedString = new string[2];
-            string[] infoTip = new string[2];
-            string[] iconString = new string[2];
+            string[] localizedString;
+            string[] infoTip = new string[1];
+            List<string> iconString;
             IntPtr hMod;
             uint stringTableIndex;
             int iconIndex;
@@ -104,31 +104,29 @@ namespace WindowsControlPanelItems
                             {
                                 if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
                                 {
-                                    iconString = currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2);
+                                    iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2));
 
-                                    if (iconString.Length > 1)
+                                    if (iconString.Count < 2)
                                     {
-                                        iconIndex = (int)sanitizeUint(iconString[1]);
+                                        iconString.Add("0");
                                     }
-                                    else
-                                    {
-                                        iconIndex = 0;
-                                    }
+
+                                    iconIndex = (int)sanitizeUint(iconString[1]);
 
                                     ExtractIconEx(iconString[0], iconIndex, out largeIconPtr, out smallIconPtr, 1);
 
                                     try
                                     {
-                                        smallIcon = Icon.FromHandle(smallIconPtr);
                                         largeIcon = Icon.FromHandle(largeIconPtr);
+                                        smallIcon = Icon.FromHandle(smallIconPtr);
                                     }
                                     catch (Exception ex)
                                     {
                                         Debug.WriteLine(ex.Message);
                                     }
-
-                                }
+                                }                                
                             }
+                            
 
                             executablePath = new ProcessStartInfo();
                             executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
