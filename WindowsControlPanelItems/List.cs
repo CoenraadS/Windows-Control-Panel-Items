@@ -133,9 +133,8 @@ namespace WindowsControlPanelItems
 
 
                                     iconIndex = (IntPtr)sanitizeUint(iconString[1]);
-                                    IntPtr dummy = IntPtr.Zero;
-                                    largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
-                                    if (largeIconPtr == IntPtr.Zero) //Big problem, how to load default resource. It should exist at zero, but tests below don't work.
+
+                                    if (iconIndex == IntPtr.Zero) //Big problem, how to load default resource. It should exist at zero, but tests below don't work.
                                     {
                                         largeIconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, size, size, 0);
                                         Debug.WriteLine("IntPtr.Zero => " + largeIconPtr.ToString());
@@ -145,6 +144,10 @@ namespace WindowsControlPanelItems
 
                                         largeIconPtr = LoadImage(dataFilePointer, "#0", 1, size, size, 0);
                                         Debug.WriteLine("Passing 0 => " + largeIconPtr.ToString());
+                                    }
+                                    else
+                                    {
+                                        largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
                                     }
 
                                     try
