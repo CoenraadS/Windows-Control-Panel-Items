@@ -9,14 +9,11 @@ namespace test
     public partial class Form1 : Form
     {
         List<WindowsControlPanelItems.ControlPanelItem> myList = new List<WindowsControlPanelItems.ControlPanelItem>();
-        int count;
-        string folder;
         public Form1()
         {
-            folder = @"Images\";
-            myList = WindowsControlPanelItems.List.Create(48);
-            count = 0;
-            InitializeComponent();                    
+            InitializeComponent();
+         
+            myList = WindowsControlPanelItems.List.Create(256);
             
         }
 
@@ -26,17 +23,12 @@ namespace test
             foreach (var item in myList)
             {
                 Debug.WriteLine(item.LocalizedString);
-                Process.Start(item.ExecutablePath);
+                this.Icon = item.Icon;
+                //Process.Start(item.executablePath);
+                Thread.Sleep(100);
             }
 
             MessageBox.Show("Test Complete");
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            pictureBox1.Image = myList[count].Icon.ToBitmap();
-            myList[count].Icon.ToBitmap().Save(folder + myList[count].ApplicationName + ".bmp");
-            count++;
         }
     }
 }
