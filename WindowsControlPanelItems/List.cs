@@ -38,7 +38,7 @@ namespace WindowsControlPanelItems
 
         const string CONTROL = @"%SystemRoot%\System32\control.exe";
 
-        public static List<ControlPanelItem> Create()
+        public static List<ControlPanelItem> Create(int size)
         {
             List<WindowsControlPanelItems.ControlPanelItem> controlPanelItems = new List<WindowsControlPanelItems.ControlPanelItem>();
             string applicationName;
@@ -134,16 +134,16 @@ namespace WindowsControlPanelItems
 
                                     iconIndex = (IntPtr)sanitizeUint(iconString[1]);
                                     IntPtr dummy = IntPtr.Zero;
-                                    largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, 256, 256, 0);
+                                    largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
                                     if (largeIconPtr == IntPtr.Zero) //Big problem, how to load default resource. It should exist at zero, but tests below don't work.
                                     {
-                                        largeIconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, 256, 256, 0);
+                                        largeIconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, size, size, 0);
                                         Debug.WriteLine("IntPtr.Zero => " + largeIconPtr.ToString());
 
-                                        largeIconPtr = LoadImage(dataFilePointer, 1, 256, 256, 0);
+                                        largeIconPtr = LoadImage(dataFilePointer, 1, size, size, 0);
                                         Debug.WriteLine("Not passing anything => " + largeIconPtr.ToString());
 
-                                        largeIconPtr = LoadImage(dataFilePointer, "#0",1, 256, 256, 0);
+                                        largeIconPtr = LoadImage(dataFilePointer, "#0", 1, size, size, 0);
                                         Debug.WriteLine("Passing 0 => " + largeIconPtr.ToString());
                                     }
 

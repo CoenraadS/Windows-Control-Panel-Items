@@ -6,20 +6,19 @@ namespace WindowsControlPanelItems
 {
     public class ControlPanelItem
     {
-        public string localizedString { get; private set; }
-        public string infoTip { get; private set; }
-        public string applicationName { get; private set; }
-        public ProcessStartInfo executablePath { get; private set; }
-        //public Icon smallIcon { get; private set; }
-        public Icon largeIcon { get; private set; }
+        public string LocalizedString { get; private set; }
+        public string InfoTip { get; private set; }
+        public string ApplicationName { get; private set; }
+        public ProcessStartInfo ExecutablePath { get; private set; }
+        public Icon Icon { get; private set; }
 
         public ControlPanelItem(string newLocalizedString, string newInfoTip, string newApplicationName, ProcessStartInfo newExecutablePath, Icon newLargeIcon)
         {
-            localizedString = newLocalizedString;
-            infoTip = newInfoTip;
-            applicationName = newApplicationName;
-            executablePath = newExecutablePath;
-            largeIcon = newLargeIcon;
+            LocalizedString = newLocalizedString;
+            InfoTip = newInfoTip;
+            ApplicationName = newApplicationName;
+            ExecutablePath = newExecutablePath;
+            Icon = newLargeIcon;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace test
         {
             InitializeComponent();
          
-            myList = WindowsControlPanelItems.List.Create();
+            myList = WindowsControlPanelItems.List.Create(256);
             
         }
 
@@ -22,8 +22,8 @@ namespace test
             //Warning, spawns a lot of windows.
             foreach (var item in myList)
             {
-                Debug.WriteLine(item.localizedString);
-                this.Icon = item.largeIcon;
+                Debug.WriteLine(item.LocalizedString);
+                this.Icon = item.Icon;
                 //Process.Start(item.executablePath);
                 Thread.Sleep(100);
             }
