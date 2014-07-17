@@ -44,7 +44,7 @@ namespace WindowsControlPanelItems
 
         static Queue<IntPtr> iconQueue;
 
-        public static List<ControlPanelItem> Create(int size)
+        public static List<ControlPanelItem> Create(int iconSize)
         {
             List<WindowsControlPanelItems.ControlPanelItem> controlPanelItems = new List<WindowsControlPanelItems.ControlPanelItem>();
             string applicationName;
@@ -148,13 +148,13 @@ namespace WindowsControlPanelItems
 
                                         while (iconPtr == IntPtr.Zero && iconQueue.Count > 0)
                                         {
-                                            iconPtr = LoadImage(dataFilePointer, iconQueue.Dequeue(), 1, size, size, 0);
+                                            iconPtr = LoadImage(dataFilePointer, iconQueue.Dequeue(), 1, iconSize, iconSize, 0);
                                         }
 
                                     }
                                     else
                                     {
-                                        iconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
+                                        iconPtr = LoadImage(dataFilePointer, iconIndex, 1, iconSize, iconSize, 0);
                                     }
 
                                     try
