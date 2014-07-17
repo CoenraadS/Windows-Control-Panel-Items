@@ -50,8 +50,8 @@ namespace WindowsControlPanelItems
             IntPtr iconIndex;
             StringBuilder resource;
             ProcessStartInfo executablePath;
-            IntPtr largeIconPtr = IntPtr.Zero;
-            Icon largeIcon;
+            IntPtr iconPtr = IntPtr.Zero;
+            Icon myIcon;
 
             RegistryKey nameSpace = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
             RegistryKey clsid = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID");
@@ -92,7 +92,7 @@ namespace WindowsControlPanelItems
                                 }
                                 infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
 
-                                dataFilePointer = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE); //IMAGEFILE
+                                dataFilePointer = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
 
                                 stringTableIndex = sanitizeUint(infoTip[1]);
 
@@ -112,7 +112,7 @@ namespace WindowsControlPanelItems
 
                             FreeLibrary(dataFilePointer); //We are finished with extracting strings. Prepare to load icon file.
                             dataFilePointer = IntPtr.Zero;
-                            largeIcon = null;
+                            myIcon = null;
 
                             if (currentKey.OpenSubKey("DefaultIcon") != null)
                             {
@@ -136,23 +136,23 @@ namespace WindowsControlPanelItems
 
                                     if (iconIndex == IntPtr.Zero) //Big problem, how to load default resource. It should exist at zero, but tests below don't work.
                                     {
-                                        largeIconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, size, size, 0);
-                                        Debug.WriteLine("IntPtr.Zero => " + largeIconPtr.ToString());
+                                        iconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, size, size, 0);
+                                        Debug.WriteLine("IntPtr.Zero => " + iconPtr.ToString());
 
-                                        largeIconPtr = LoadImage(dataFilePointer, 1, size, size, 0);
-                                        Debug.WriteLine("Not passing anything => " + largeIconPtr.ToString());
+                                        iconPtr = LoadImage(dataFilePointer, 1, size, size, 0);
+                                        Debug.WriteLine("Not passing anything => " + iconPtr.ToString());
 
-                                        largeIconPtr = LoadImage(dataFilePointer, "#0", 1, size, size, 0);
-                                        Debug.WriteLine("Passing 0 => " + largeIconPtr.ToString());
+                                        iconPtr = LoadImage(dataFilePointer, "#0", 1, size, size, 0);
+                                        Debug.WriteLine("Passing 0 => " + iconPtr.ToString());
                                     }
                                     else
                                     {
-                                        largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
+                                        iconPtr = LoadImage(dataFilePointer, iconIndex, 1, size, size, 0);
                                     }
 
                                     try
                                     {
-                                        largeIcon = (Icon)Icon.FromHandle(largeIconPtr).Clone();
+                                        myIcon = (Icon)Icon.FromHandle(iconPtr).Clone();
                                     }
                                     catch (Exception)
                                     {
@@ -165,11 +165,11 @@ namespace WindowsControlPanelItems
                             executablePath = new ProcessStartInfo();
                             executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
                             executablePath.Arguments = "-name " + applicationName;
-                            controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, largeIcon));
+                            controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, myIcon));
                             FreeLibrary(dataFilePointer);
-                            if (largeIconPtr != IntPtr.Zero)
+                            if (iconPtr != IntPtr.Zero)
                             {
-                                DestroyIcon(largeIcon.Handle);
+                                DestroyIcon(myIcon.Handle);
                             }
                         }
                     }
