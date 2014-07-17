@@ -19,12 +19,17 @@ namespace WindowsControlPanelItems
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int LoadString(IntPtr hInstance, uint uID, StringBuilder lpBuffer, int nBufferMax);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)] //LoadImage IntPtr
         static extern IntPtr LoadImage(IntPtr hinst, IntPtr lpszName, uint uType,
         int cxDesired, int cyDesired, uint fuLoad);
 
-        [DllImport("Shell32.dll", EntryPoint = "ExtractIconExW", CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-        private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, //LoadImage String
+        int cxDesired, int cyDesired, uint fuLoad);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)] //LoadImage no value
+        static extern IntPtr LoadImage(IntPtr hinst, uint uType,
+        int cxDesired, int cyDesired, uint fuLoad);
 
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
@@ -128,16 +133,23 @@ namespace WindowsControlPanelItems
 
 
                                     iconIndex = (IntPtr)sanitizeUint(iconString[1]);
-
+                                    IntPtr dummy = IntPtr.Zero;
                                     largeIconPtr = LoadImage(dataFilePointer, iconIndex, 1, 256, 256, 0);
-                                    if (largeIconPtr == IntPtr.Zero)
+                                    if (largeIconPtr == IntPtr.Zero) //Big problem, how to load default resource. It should exist at zero, but tests below don't work.
                                     {
-                                        Debug.WriteLine(Marshal.GetLastWin32Error());
+                                        largeIconPtr = LoadImage(dataFilePointer, IntPtr.Zero, 1, 256, 256, 0);
+                                        Debug.WriteLine("IntPtr.Zero => " + largeIconPtr.ToString());
+
+                                        largeIconPtr = LoadImage(dataFilePointer, 1, 256, 256, 0);
+                                        Debug.WriteLine("Not passing anything => " + largeIconPtr.ToString());
+
+                                        largeIconPtr = LoadImage(dataFilePointer, "#0",1, 256, 256, 0);
+                                        Debug.WriteLine("Passing 0 => " + largeIconPtr.ToString());
                                     }
 
                                     try
                                     {
-                                        largeIcon = Icon.FromHandle(largeIconPtr);
+                                        largeIcon = (Icon)Icon.FromHandle(largeIconPtr).Clone();
                                     }
                                     catch (Exception)
                                     {
