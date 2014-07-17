@@ -78,7 +78,7 @@ namespace WindowsControlPanelItems
                     if (currentKey.GetValue("System.ApplicationName") != null && currentKey.GetValue("LocalizedString") != null)
                     {
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
-                        Debug.WriteLine(key.ToString() + " (" + applicationName + ")");
+                        //Debug.WriteLine(key.ToString() + " (" + applicationName + ")");
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
                         if (localizedString[0][0] == '@')
                         {
@@ -238,8 +238,8 @@ namespace WindowsControlPanelItems
 
         private static bool EnumRes(IntPtr hModule, IntPtr lpszType, IntPtr lpszName, IntPtr lParam)
         {
-            Debug.WriteLine("Type: " + GET_RESOURCE_NAME(lpszType));
-            Debug.WriteLine("Name: " + GET_RESOURCE_NAME(lpszName));
+            //Debug.WriteLine("Type: " + GET_RESOURCE_NAME(lpszType));
+            //Debug.WriteLine("Name: " + GET_RESOURCE_NAME(lpszName));
             iconQueue.Enqueue(lpszName);
             return true;
         }
