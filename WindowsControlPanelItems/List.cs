@@ -21,9 +21,6 @@ namespace WindowsControlPanelItems
         IntPtr lParam);
 
         [DllImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern bool EnumResourceNamesWithName(IntPtr hModule, string lpszType, EnumResNameDelegate lpEnumFunc, IntPtr lParam);
-
-        [DllImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern bool EnumResourceNamesWithID(IntPtr hModule, uint lpszType, EnumResNameDelegate lpEnumFunc, IntPtr lParam);
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -39,11 +36,7 @@ namespace WindowsControlPanelItems
         static extern IntPtr LoadImage(IntPtr hinst, IntPtr lpszName, uint uType,
         int cxDesired, int cyDesired, uint fuLoad);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern IntPtr LoadImage(IntPtr hinst, String lpszName, uint uType,
-        int cxDesired, int cyDesired, uint fuLoad);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
 
         [DllImport("kernel32.dll")]
