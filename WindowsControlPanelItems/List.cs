@@ -49,7 +49,7 @@ namespace WindowsControlPanelItems
             List<WindowsControlPanelItems.ControlPanelItem> controlPanelItems = new List<WindowsControlPanelItems.ControlPanelItem>();
             string applicationName;
             string[] localizedString;
-            string[] infoTip = new string[1];
+            string[] infoTip = new string[2]; //Make compile happy
             List<string> iconString;
             IntPtr dataFilePointer;
             uint stringTableIndex;
@@ -63,16 +63,29 @@ namespace WindowsControlPanelItems
             RegistryKey clsid = Registry.ClassesRoot.OpenSubKey("CLSID");
             RegistryKey currentKey;
 
+            List<string> log = new List<string>();
+            log.Add("=== Control Panel ===");
+
             foreach (string key in nameSpace.GetSubKeyNames())
             {
                 currentKey = clsid.OpenSubKey(key);
                 if (currentKey != null)
                 {
-                    if (currentKey.GetValue("System.ApplicationName") != null && currentKey.GetValue("LocalizedString") != null)
+                    executablePath = new ProcessStartInfo();
+                    applicationName = "";
+                    log.Add(key);
+                    if (currentKey.GetValue("System.ApplicationName") != null)
                     {
                         applicationName = currentKey.GetValue("System.ApplicationName").ToString();
-                        //Debug.WriteLine(key.ToString() + " (" + applicationName + ")");
+                        log.Add("System.ApplicationName: " + applicationName);
+                        executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
+                        executablePath.Arguments = "-name " + applicationName;
+                    }
+
+                    if (currentKey.GetValue("LocalizedString") != null)
+                    {
                         localizedString = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
+                        log.Add("LocalizedString: " + currentKey.GetValue("LocalizedString").ToString());
                         if (localizedString[0][0] == '@')
                         {
                             localizedString[0] = localizedString[0].Substring(1);
@@ -91,29 +104,31 @@ namespace WindowsControlPanelItems
 
                             if (currentKey.GetValue("InfoTip") != null)
                             {
+                                log.Add("InfoTip LoadString(): " + currentKey.GetValue("InfoTip").ToString());
                                 infoTip = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
-                                if (infoTip[0][0] == '@')
+
+                                if (infoTip.Length == 2)
                                 {
-                                    infoTip[0] = infoTip[0].Substring(1);
+                                    if (infoTip[0][0] == '@')
+                                    {
+                                        infoTip[0] = infoTip[0].Substring(1);
+                                    }
+                                    infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
+
+                                    dataFilePointer = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+
+                                    stringTableIndex = sanitizeUint(infoTip[1]);
+
+                                    resource = new StringBuilder(255);
+                                    LoadString(dataFilePointer, stringTableIndex, resource, resource.Capacity + 1);
+
+                                    infoTip[0] = resource.ToString();
                                 }
-                                infoTip[0] = Environment.ExpandEnvironmentVariables(infoTip[0]);
-
-                                dataFilePointer = LoadLibraryEx(infoTip[0], IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-
-                                stringTableIndex = sanitizeUint(infoTip[1]);
-
-                                resource = new StringBuilder(255);
-                                LoadString(dataFilePointer, stringTableIndex, resource, resource.Capacity + 1);
-
-                                infoTip[0] = resource.ToString();
-                            }
-                            else if (currentKey.GetValue(null) != null)
-                            {
-                                infoTip[0] = currentKey.GetValue(null).ToString();
                             }
                             else
                             {
                                 infoTip[0] = "";
+                                log.Add("InfoTip not found");
                             }
 
                             FreeLibrary(dataFilePointer); //We are finished with extracting strings. Prepare to load icon file.
@@ -125,6 +140,7 @@ namespace WindowsControlPanelItems
                             {
                                 if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
                                 {
+                                    log.Add("DefaultIcon: " + currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString());
                                     iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2));
                                     if (iconString[0][0] == '@')
                                     {
@@ -150,7 +166,6 @@ namespace WindowsControlPanelItems
                                         {
                                             iconPtr = LoadImage(dataFilePointer, iconQueue.Dequeue(), 1, iconSize, iconSize, 0);
                                         }
-
                                     }
                                     else
                                     {
@@ -161,17 +176,13 @@ namespace WindowsControlPanelItems
                                     {
                                         myIcon = Icon.FromHandle(iconPtr);
                                     }
-                                    catch (Exception)
+                                    catch (Exception ex)
                                     {
-                                        //Silently fail for now.
+                                        log.Add(ex.Message);
+                                        log.Add("iconPtr: " + iconPtr.ToString());
                                     }
                                 }
                             }
-
-
-                            executablePath = new ProcessStartInfo();
-                            executablePath.FileName = Environment.ExpandEnvironmentVariables(CONTROL);
-                            executablePath.Arguments = "-name " + applicationName;
                             controlPanelItems.Add(new ControlPanelItem(localizedString[0], infoTip[0], applicationName, executablePath, myIcon));
                             FreeLibrary(dataFilePointer);
                             if (iconPtr != IntPtr.Zero)

@@ -35,7 +35,7 @@ namespace test
         private void pictureBox1_Click(object sender, EventArgs e)
         {
             pictureBox1.Image = myList[count].Icon.ToBitmap();
-            myList[count].Icon.ToBitmap().Save(folder + myList[count].ApplicationName + ".bmp");
+            //myList[count].Icon.ToBitmap().Save(folder + myList[count].ApplicationName + ".bmp");
             count++;
         }
     }
