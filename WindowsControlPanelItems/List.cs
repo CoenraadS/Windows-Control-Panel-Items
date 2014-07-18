@@ -60,7 +60,7 @@ namespace WindowsControlPanelItems
             Icon myIcon;
 
             RegistryKey nameSpace = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace");
-            RegistryKey clsid = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Classes\\CLSID");
+            RegistryKey clsid = Registry.ClassesRoot.OpenSubKey("CLSID");
             RegistryKey currentKey;
 
             foreach (string key in nameSpace.GetSubKeyNames())
