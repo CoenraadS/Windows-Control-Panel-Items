@@ -8,15 +8,17 @@ namespace test
 {
     public partial class Form1 : Form
     {
-        List<WindowsControlPanelItems.ControlPanelItem> myList = new List<WindowsControlPanelItems.ControlPanelItem>();
-        int count;
-        string folder;
+        List<WindowsControlPanelItems.ControlPanelItem> myList;
+
         public Form1()
         {
-            folder = @"Images\";
             myList = WindowsControlPanelItems.List.Create(48);
-            count = 0;
             InitializeComponent();                    
+
+            foreach (var item in myList)
+            {
+                comboBox1.Items.Add(item.LocalizedString.ToString());
+            }
             
         }
 
@@ -32,11 +34,15 @@ namespace test
             MessageBox.Show("Test Complete");
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+
+        private void button1_Click(object sender, EventArgs e)
         {
-            pictureBox1.Image = myList[count].Icon.ToBitmap();
-            //myList[count].Icon.ToBitmap().Save(folder + myList[count].ApplicationName + ".bmp");
-            count++;
+            Process.Start(myList[comboBox1.SelectedIndex].ExecutablePath);
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pictureBox1.Image = myList[comboBox1.SelectedIndex].Icon.ToBitmap();
         }
     }
 }
