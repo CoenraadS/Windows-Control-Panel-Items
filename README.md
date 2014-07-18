@@ -8,8 +8,6 @@
 
 - InfoTip (Description)
 
-- System.ApplicationName (Canonical Name)
-
 - ExecutablePath (ProcessStartInfo)
 
 - Icon

@@ -11,19 +11,12 @@ namespace WindowsControlPanelItems
         public ProcessStartInfo ExecutablePath { get; private set; }
         public Icon Icon { get; private set; }
 
-        public ControlPanelItem(string newLocalizedString, string newInfoTip, ProcessStartInfo newExecutablePath, Icon newLargeIcon)
+        public ControlPanelItem(string newLocalizedString, string newInfoTip, ProcessStartInfo newExecutablePath, Icon newIcon)
         {
             LocalizedString = newLocalizedString;
             InfoTip = newInfoTip;
             ExecutablePath = newExecutablePath;
-            try
-            {
-                Icon = (Icon)newLargeIcon.Clone();
-            }
-            catch
-            {
-                Icon = null;
-            }
+            Icon = newIcon;
         }
     }
 }
