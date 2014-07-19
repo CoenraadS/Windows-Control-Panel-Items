@@ -120,7 +120,7 @@ namespace WindowsControlPanelItems
 
             if (currentKey.GetValue("LocalizedString") != null)
             {
-                localizedStringRaw = currentKey.GetValue("LocalizedString").ToString().Split(new char[] { ',' }, 2);
+                localizedStringRaw = currentKey.GetValue("LocalizedString").ToString().Split(new string[] { ",-" }, StringSplitOptions.None);
 
                 if (localizedStringRaw.Length > 1)
                 {
@@ -141,9 +141,7 @@ namespace WindowsControlPanelItems
 
                     localizedString = resource.ToString();
 
-                    /*This shouldn't be necessary, but some apps (e.g. Bootcamp)
-                     * don't follow Microsoft's standard. Have to make a choice whether
-                     * empty string == failure, or use default name. I'm using default name */
+                    //Some apps don't return a string, although they do have a stringIndex. Use Default value.
 
                     if (String.IsNullOrEmpty(localizedString))
                     {
@@ -202,6 +200,10 @@ namespace WindowsControlPanelItems
                     FreeLibrary(dataFilePointer);
 
                     infoTip = resource.ToString();
+                }
+                else
+                {
+                    infoTip = currentKey.GetValue("InfoTip").ToString();
                 }
             }
             else
