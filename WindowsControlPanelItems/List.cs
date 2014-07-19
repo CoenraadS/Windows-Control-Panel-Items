@@ -183,7 +183,7 @@ namespace WindowsControlPanelItems
 
             if (currentKey.GetValue("InfoTip") != null)
             {
-                infoTipRaw = currentKey.GetValue("InfoTip").ToString().Split(new char[] { ',' }, 2);
+                infoTipRaw = currentKey.GetValue("InfoTip").ToString().Split(new string[] { ",-" }, StringSplitOptions.None);
 
                 if (infoTipRaw.Length == 2)
                 {
@@ -224,7 +224,7 @@ namespace WindowsControlPanelItems
             {
                 if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
                 {
-                    iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2));
+                    iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new string[] { ",-" }, StringSplitOptions.None));
                     if (iconString[0][0] == '@')
                     {
                         iconString[0] = iconString[0].Substring(1);
