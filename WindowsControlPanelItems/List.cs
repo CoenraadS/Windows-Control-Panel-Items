@@ -226,7 +226,7 @@ namespace WindowsControlPanelItems
             {
                 if (currentKey.OpenSubKey("DefaultIcon").GetValue(null) != null)
                 {
-                    iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new string[] { ",-" }, StringSplitOptions.None));
+                    iconString = new List<string>(currentKey.OpenSubKey("DefaultIcon").GetValue(null).ToString().Split(new char[] { ',' }, 2));
                     if (iconString[0][0] == '@')
                     {
                         iconString[0] = iconString[0].Substring(1);
@@ -242,6 +242,8 @@ namespace WindowsControlPanelItems
 
                     iconIndex = (IntPtr)sanitizeUint(iconString[1]);
 
+                    iconPtr = LoadImage(dataFilePointer, iconIndex, 1, iconSize, iconSize, 0);
+
                     if (iconIndex == IntPtr.Zero)
                     {
                         iconQueue = new Queue<IntPtr>();
@@ -252,21 +254,20 @@ namespace WindowsControlPanelItems
                             iconPtr = LoadImage(dataFilePointer, iconQueue.Dequeue(), 1, iconSize, iconSize, 0);
                         }
                     }
-                    else
-                    {
-                        iconPtr = LoadImage(dataFilePointer, iconIndex, 1, iconSize, iconSize, 0);
-                    }
 
                     FreeLibrary(dataFilePointer);
 
-                    try
+                    if (iconPtr != IntPtr.Zero)
                     {
-                        myIcon = Icon.FromHandle(iconPtr);
-                        myIcon = (Icon)myIcon.Clone(); //Remove pointer dependancy.
-                    }
-                    catch
-                    {
-                        //Silently fail for now..
+                        try
+                        {
+                            myIcon = Icon.FromHandle(iconPtr);
+                            myIcon = (Icon)myIcon.Clone(); //Remove pointer dependancy.
+                        }
+                        catch
+                        {
+                            //Silently fail for now.
+                        }
                     }
                 }
             }

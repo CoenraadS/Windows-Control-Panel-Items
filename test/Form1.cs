@@ -42,6 +42,7 @@ namespace test
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (myList[comboBox1.SelectedIndex].Icon != null)
             pictureBox1.Image = myList[comboBox1.SelectedIndex].Icon.ToBitmap();
             labelName.Text = myList[comboBox1.SelectedIndex].LocalizedString;
             labelInfo.Text = myList[comboBox1.SelectedIndex].InfoTip;
