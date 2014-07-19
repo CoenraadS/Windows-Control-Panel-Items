@@ -244,10 +244,10 @@ namespace WindowsControlPanelItems
 
                     iconPtr = LoadImage(dataFilePointer, iconIndex, 1, iconSize, iconSize, 0);
 
-                    if (iconIndex == IntPtr.Zero)
+                    if (iconPtr == IntPtr.Zero)
                     {
                         iconQueue = new Queue<IntPtr>();
-                        EnumResourceNamesWithID(dataFilePointer, GROUP_ICON, new EnumResNameDelegate(EnumRes), IntPtr.Zero); //Iterate through resources. 
+                        EnumResourceNamesWithID(dataFilePointer, 3, new EnumResNameDelegate(EnumRes), IntPtr.Zero); //Iterate through resources. 
 
                         while (iconPtr == IntPtr.Zero && iconQueue.Count > 0)
                         {
