@@ -1,6 +1,6 @@
 #### Programmatically generate a list of Control Panel Items for the Local User.
 
-###### Usage: `List<ControlPanelItem> foo = WindowsControlPanelItems.List.Create(int iconSize)`
+Usage: `List<ControlPanelItem> foo = WindowsControlPanelItems.List.Create(uint iconSize)`
 
 ###### Information retrieved:
 
