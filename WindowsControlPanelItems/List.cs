@@ -65,19 +65,19 @@ namespace WindowsControlPanelItems
                 {
                     executablePath = getExecutablePath(currentKey);
 
-                    if (executablePath == null)
-                        continue;  //Cannot have item without executable path
+                    if (!(executablePath == null)) //Cannot have item without executable path
+                    {
+                        localizedString = getLocalizedString(currentKey);
 
-                    localizedString = getLocalizedString(currentKey);
+                        if (!string.IsNullOrEmpty(localizedString))//Cannot have item without Title
+                        {
+                            infoTip = getInfoTip(currentKey);
 
-                    if (string.IsNullOrEmpty(localizedString))
-                        continue; //Cannot have item without Title
+                            myIcon = getIcon(currentKey, size);
 
-                    infoTip = getInfoTip(currentKey);
-
-                    myIcon = getIcon(currentKey, size);
-                    
-                    controlPanelItems.Add(new ControlPanelItem(localizedString, infoTip, executablePath, myIcon));                    
+                            controlPanelItems.Add(new ControlPanelItem(localizedString, infoTip, executablePath, myIcon));
+                        }
+                    }
 
                 }
             }
