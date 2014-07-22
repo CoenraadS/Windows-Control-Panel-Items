@@ -103,7 +103,7 @@ namespace WindowsControlPanelItems
                 string input = "\"" + Environment.ExpandEnvironmentVariables(currentKey.OpenSubKey("Shell\\Open\\Command").GetValue(null).ToString()) + "\"";
                 executablePath.FileName = "cmd.exe";
                 executablePath.Arguments = "/C " + input;
-                executablePath.WindowStyle = ProcessWindowStyle.Hidden;                
+                executablePath.WindowStyle = ProcessWindowStyle.Hidden;
 
             }
             else
@@ -124,14 +124,11 @@ namespace WindowsControlPanelItems
 
             if (currentKey.GetValue("LocalizedString") != null)
             {
-                localizedStringRaw = currentKey.GetValue("LocalizedString").ToString().Split(new string[] { ",-" }, StringSplitOptions.None);
-
-                if (localizedStringRaw.Length > 1)
+                if (currentKey.GetValue("LocalizedString").ToString()[0] == '@') //Uses string indexes
                 {
-                    if (localizedStringRaw[0][0] == '@')
-                    {
-                        localizedStringRaw[0] = localizedStringRaw[0].Substring(1);
-                    }
+                    localizedStringRaw = currentKey.GetValue("LocalizedString").ToString().Split(new string[] { ",-" }, StringSplitOptions.None);
+
+                    localizedStringRaw[0] = localizedStringRaw[0].Substring(1);
 
                     localizedStringRaw[0] = Environment.ExpandEnvironmentVariables(localizedStringRaw[0]);
 
@@ -161,7 +158,7 @@ namespace WindowsControlPanelItems
                 }
                 else
                 {
-                    localizedString = localizedStringRaw[0];
+                    localizedString = currentKey.GetValue("LocalizedString").ToString();
                 }
             }
             else if (currentKey.GetValue(null) != null)
@@ -251,7 +248,7 @@ namespace WindowsControlPanelItems
                     if (iconPtr == IntPtr.Zero)
                     {
                         iconQueue = new Queue<IntPtr>();
-                        EnumResourceNamesWithID(dataFilePointer, 3, new EnumResNameDelegate(EnumRes), IntPtr.Zero); //Iterate through resources. 
+                        EnumResourceNamesWithID(dataFilePointer, GROUP_ICON, new EnumResNameDelegate(EnumRes), IntPtr.Zero); //Iterate through resources. 
 
                         while (iconPtr == IntPtr.Zero && iconQueue.Count > 0)
                         {
@@ -330,8 +327,8 @@ namespace WindowsControlPanelItems
 
         private static bool EnumRes(IntPtr hModule, IntPtr lpszType, IntPtr lpszName, IntPtr lParam)
         {
-            //Debug.WriteLine("Type: " + GET_RESOURCE_NAME(lpszType));
-            //Debug.WriteLine("Name: " + GET_RESOURCE_NAME(lpszName));
+            Debug.WriteLine("Type: " + GET_RESOURCE_NAME(lpszType));
+            Debug.WriteLine("Name: " + GET_RESOURCE_NAME(lpszName));
             iconQueue.Enqueue(lpszName);
             return true;
         }
